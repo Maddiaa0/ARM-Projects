@@ -1,0 +1,410 @@
+
+
+
+ARM Macro Assembler    Page 1 
+
+
+    1 00000000                 AREA             Lotto, CODE, READONLY
+    2 00000000                 IMPORT           main
+    3 00000000                 EXPORT           start
+    4 00000000         
+    5 00000000         ;loop through each one of the tickets to tickets count
+    6 00000000         ;then match the tickets with the draw, if it is match4, 
+                       set to true, then match5, set to true and set 4 to 
+    7 00000000         ;false etc with 6
+    8 00000000         ;then alter the match things
+    9 00000000         ;if match < 6
+   10 00000000         ;if match < 5
+   11 00000000         ;if match < 4
+   12 00000000         
+   13 00000000         start
+   14 00000000 E59F10B4        LDR              R1, =TICKETS
+   15 00000004         
+   16 00000004 E3A02000        MOV              R2, #0      ;ticketCountCounter
+                                                             = 0
+   17 00000008 E59F30B0        LDR              R3, =COUNT  ;ticketCount = Memo
+                                                            ry.word(ticketCount
+                                                            )
+   18 0000000C E5933000        LDR              R3, [R3]
+   19 00000010         
+   20 00000010         
+   21 00000010         ticketCounterLoop
+   22 00000010 E3A04000        MOV              R4, #0      ;numberOfMatches = 
+                                                            0
+   23 00000014 E1520003        CMP              R2, R3      ;while (ticketCount
+                                                            er <= ticketCount)
+   24 00000018 AA000026        BGE              endTicketCounterLoop ;{
+   25 0000001C         
+   26 0000001C         ;there are 6 numbers within the draw 
+   27 0000001C E59F50A0        LDR              R5, =DRAW   ;load the draw numb
+                                                            ers into the loop
+   28 00000020 E3A07000        MOV              R7, #0      ;ticket2Counter
+   29 00000024         
+   30 00000024         drawLoop
+   31 00000024 E3570006        CMP              R7, #6      ;while (ticketCount
+                                                            er <= 6)
+   32 00000028 0A000011        BEQ              endDrawLoop ;{
+   33 0000002C         
+   34 0000002C E3A08000        MOV              R8, #0      ;ticketMatch = fals
+                                                            e
+   35 00000030 E5D1A000        LDRB             R10, [R1]   ;drawItem = Memory.
+                                                            Word(drawItem)
+   36 00000034 E3A0B000        MOV              R11, #0     ;nextDrawStepper
+   37 00000038         
+   38 00000038         ticketLoop
+   39 00000038 E35B0006        CMP              R11, #6     ;while (drawCounter
+                                                             <=6 && ticketMatch
+                                                             == false)
+   40 0000003C 0A000008        BEQ              endTicketLoop
+   41 00000040 E3580001        CMP              R8, #1
+   42 00000044 0A000006        BEQ              endTicketLoop ;{
+   43 00000048         
+   44 00000048         
+   45 00000048 E5D5C000        LDRB             R12, [R5]   ;drawItem = Memory.
+                                                            word(drawItem)
+   46 0000004C         
+
+
+
+ARM Macro Assembler    Page 2 
+
+
+   47 0000004C E15C000A        CMP              R12, R10    ;if (ticketItem = d
+                                                            rawItem)
+   48 00000050 1A000000        BNE              skipIf      ;{
+   49 00000054         
+   50 00000054 E2844001        ADD              R4, R4, #1  ;increase match cou
+                                                            nter (matchCounter+
+                                                            +)
+   51 00000058         
+   52 00000058         skipIf                               ;}
+   53 00000058         
+   54 00000058 E2855001        ADD              R5, R5, #1  ;get next lottoNumb
+                                                            er
+   55 0000005C E28BB001        ADD              R11, R11, #1 ;drawCounter++
+   56 00000060 EAFFFFF4        B                ticketLoop
+   57 00000064         
+   58 00000064         endTicketLoop                        ;}
+   59 00000064         
+   60 00000064 E59F5058        LDR              R5, =DRAW   ;reset the draw cou
+                                                            nter back
+   61 00000068 E2877001        ADD              R7, R7, #1  ;ticketCounter++
+   62 0000006C E2811001        ADD              R1, R1, #1  ;get next drawNumbe
+                                                            r
+   63 00000070 EAFFFFEB        B                drawLoop
+   64 00000074         
+   65 00000074         endDrawLoop                          ;}
+   66 00000074         
+   67 00000074         ;put in a load of code here to sort the 4-6 etc.
+   68 00000074 E3540006        CMP              R4, #6
+   69 00000078 BA000001        BLT              compare5
+   70 0000007C E59F7044        LDR              R7, =MATCH6 ;add one to the mat
+                                                            ch 6 counter
+   71 00000080 EA000006        B                store
+   72 00000084         
+   73 00000084         compare5
+   74 00000084 E3540005        CMP              R4, #5
+   75 00000088 BA000001        BLT              compare4
+   76 0000008C E59F7038        LDR              R7, =MATCH5 ;add one to the mat
+                                                            ch 5 counter
+   77 00000090 EA000002        B                store
+   78 00000094         
+   79 00000094         compare4
+   80 00000094 E3540004        CMP              R4, #4
+   81 00000098 BA000004        BLT              skipStore
+   82 0000009C E59F702C        LDR              R7, =MATCH4 ;add one to the mat
+                                                            ch 4 counter
+   83 000000A0         
+   84 000000A0         store
+   85 000000A0 E3A08000        MOV              R8, #0      ;clear R8
+   86 000000A4 E5978000        LDR              R8, [R7]
+   87 000000A8 E2888001        ADD              R8, R8, #1
+   88 000000AC E5878000        STR              R8, [R7]
+   89 000000B0         
+   90 000000B0         skipStore
+   91 000000B0 E2822001        ADD              R2, R2, #1  ;increase Ticket Co
+                                                            unter
+   92 000000B4         
+   93 000000B4 EAFFFFD5        B                ticketCounterLoop ;repeat for n
+                                                            ext tickets
+   94 000000B8         
+
+
+
+ARM Macro Assembler    Page 3 
+
+
+   95 000000B8         endTicketCounterLoop
+   96 000000B8         
+   97 000000B8         
+   98 000000B8         
+   99 000000B8 EAFFFFFE 
+                       stop    B                stop
+  100 000000BC         
+  101 000000BC         
+  102 000000BC         
+  103 000000BC 00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000 
+              00000000         AREA             TestData, DATA, READWRITE
+  104 00000000         
+  105 00000000 00000009 
+                       COUNT   DCD              9           ; Number of Tickets
+                                                            
+  106 00000004 03 08 0B 
+              15 16 1F TICKETS DCB              3, 8, 11, 21, 22, 31 ; Tickets
+  107 0000000A 07 17 19 
+              1C 1D 20         DCB              7, 23, 25, 28, 29, 32
+  108 00000010 0A 0B 0C 
+              16 1A 1E         DCB              10, 11, 12, 22, 26, 30
+  109 00000016 0A 0B 0C 
+              16 1A 1E         DCB              10, 11, 12, 22, 26, 30
+  110 0000001C 0A 0B 0C 
+              16 1A 1E         DCB              10, 11, 12, 22, 26, 30
+  111 00000022 0A 0B 12 
+              16 1A 1E         DCB              10, 11, 18, 22, 26, 30
+  112 00000028 0A 0B 0C 
+              16 01 1E         DCB              10, 11, 12, 22, 1, 30
+  113 0000002E 0A 09 04 
+              03 1A 1E         DCB              10, 9, 4, 3, 26, 30
+  114 00000034 0A 02 01 
+              16 1A 1E         DCB              10, 2, 1, 22, 26, 30
+  115 0000003A         
+  116 0000003A         
+  117 0000003A         ; line 2 DCB 7, 23, 25, 28, 29, 32
+  118 0000003A         
+  119 0000003A         
+  120 0000003A 0A 0B 0C 
+              16 1A 1E DRAW    DCB              10, 11, 12, 22, 26, 30 
+                                                            ; Lottery Draw
+  121 00000040         
+  122 00000040 00000000 
+                       MATCH4  DCD              0
+  123 00000044 00000000 
+                       MATCH5  DCD              0
+  124 00000048 00000000 
+                       MATCH6  DCD              0
+  125 0000004C         
+  126 0000004C                 END
+Command Line: --debug --xref --apcs=interwork --depend=.\lotto.d -o.\lotto.o -I
+C:\Keil\ARM\RV31\INC -IC:\Keil\ARM\CMSIS\Include -IC:\Keil\ARM\Inc\Philips --pr
+edefine="__EVAL SETA 1" --predefine="__MICROLIB SETA 1" --predefine="NO_CLOCK_S
+ETUP SETA 1" --predefine="NO_EMC_SETUP SETA 1" --predefine="RAM_INTVEC SETA 1" 
+
+
+
+ARM Macro Assembler    Page 4 
+
+
+--predefine="RAM_MODE SETA 1" --predefine="REMAP SETA 1" --list=.\lotto.lst Lot
+to.s
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+Lotto 00000000
+
+Symbol: Lotto
+   Definitions
+      At line 1 in file Lotto.s
+   Uses
+      None
+Comment: Lotto unused
+compare4 00000094
+
+Symbol: compare4
+   Definitions
+      At line 79 in file Lotto.s
+   Uses
+      At line 75 in file Lotto.s
+Comment: compare4 used once
+compare5 00000084
+
+Symbol: compare5
+   Definitions
+      At line 73 in file Lotto.s
+   Uses
+      At line 69 in file Lotto.s
+Comment: compare5 used once
+drawLoop 00000024
+
+Symbol: drawLoop
+   Definitions
+      At line 30 in file Lotto.s
+   Uses
+      At line 63 in file Lotto.s
+Comment: drawLoop used once
+endDrawLoop 00000074
+
+Symbol: endDrawLoop
+   Definitions
+      At line 65 in file Lotto.s
+   Uses
+      At line 32 in file Lotto.s
+Comment: endDrawLoop used once
+endTicketCounterLoop 000000B8
+
+Symbol: endTicketCounterLoop
+   Definitions
+      At line 95 in file Lotto.s
+   Uses
+      At line 24 in file Lotto.s
+Comment: endTicketCounterLoop used once
+endTicketLoop 00000064
+
+Symbol: endTicketLoop
+   Definitions
+      At line 58 in file Lotto.s
+   Uses
+      At line 40 in file Lotto.s
+      At line 42 in file Lotto.s
+
+skipIf 00000058
+
+
+
+
+ARM Macro Assembler    Page 2 Alphabetic symbol ordering
+Relocatable symbols
+
+Symbol: skipIf
+   Definitions
+      At line 52 in file Lotto.s
+   Uses
+      At line 48 in file Lotto.s
+Comment: skipIf used once
+skipStore 000000B0
+
+Symbol: skipStore
+   Definitions
+      At line 90 in file Lotto.s
+   Uses
+      At line 81 in file Lotto.s
+Comment: skipStore used once
+start 00000000
+
+Symbol: start
+   Definitions
+      At line 13 in file Lotto.s
+   Uses
+      At line 3 in file Lotto.s
+Comment: start used once
+stop 000000B8
+
+Symbol: stop
+   Definitions
+      At line 99 in file Lotto.s
+   Uses
+      At line 99 in file Lotto.s
+Comment: stop used once
+store 000000A0
+
+Symbol: store
+   Definitions
+      At line 84 in file Lotto.s
+   Uses
+      At line 71 in file Lotto.s
+      At line 77 in file Lotto.s
+
+ticketCounterLoop 00000010
+
+Symbol: ticketCounterLoop
+   Definitions
+      At line 21 in file Lotto.s
+   Uses
+      At line 93 in file Lotto.s
+Comment: ticketCounterLoop used once
+ticketLoop 00000038
+
+Symbol: ticketLoop
+   Definitions
+      At line 38 in file Lotto.s
+   Uses
+      At line 56 in file Lotto.s
+Comment: ticketLoop used once
+14 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+Relocatable symbols
+
+COUNT 00000000
+
+Symbol: COUNT
+   Definitions
+      At line 105 in file Lotto.s
+   Uses
+      At line 17 in file Lotto.s
+Comment: COUNT used once
+DRAW 0000003A
+
+Symbol: DRAW
+   Definitions
+      At line 120 in file Lotto.s
+   Uses
+      At line 27 in file Lotto.s
+      At line 60 in file Lotto.s
+
+MATCH4 00000040
+
+Symbol: MATCH4
+   Definitions
+      At line 122 in file Lotto.s
+   Uses
+      At line 82 in file Lotto.s
+Comment: MATCH4 used once
+MATCH5 00000044
+
+Symbol: MATCH5
+   Definitions
+      At line 123 in file Lotto.s
+   Uses
+      At line 76 in file Lotto.s
+Comment: MATCH5 used once
+MATCH6 00000048
+
+Symbol: MATCH6
+   Definitions
+      At line 124 in file Lotto.s
+   Uses
+      At line 70 in file Lotto.s
+Comment: MATCH6 used once
+TICKETS 00000004
+
+Symbol: TICKETS
+   Definitions
+      At line 106 in file Lotto.s
+   Uses
+      At line 14 in file Lotto.s
+Comment: TICKETS used once
+TestData 00000000
+
+Symbol: TestData
+   Definitions
+      At line 103 in file Lotto.s
+   Uses
+      None
+Comment: TestData unused
+7 symbols
+
+
+
+ARM Macro Assembler    Page 1 Alphabetic symbol ordering
+External symbols
+
+main 00000000
+
+Symbol: main
+   Definitions
+      At line 2 in file Lotto.s
+   Uses
+      None
+Comment: main unused
+1 symbol
+361 symbols in table
